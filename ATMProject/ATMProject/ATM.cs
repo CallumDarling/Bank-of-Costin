@@ -13,25 +13,27 @@ namespace ATMProject
 {
 	public partial class ATM : Form
 	{
-		bool checkForPin = false;
-		bool checkForAccount = false;
-		String savedAccountNo;
-		String savedPIN;
-		Account account;
-		bool selectM = false;
-		bool goBack = false;
-		bool takeM = false;
+		private bool checkForPin = false;
+        private bool checkForAccount = false;
+        private String savedAccountNo;
+        private String savedPIN;
+        private Account[] accounts;
+        private Account loggedIn;
+        private String accountNo;
+        private bool selectM = false;
+        private bool goBack = false;
+        private bool takeM = false;
         //Used to show whether the semaphore should be turned on/off in the account class
-        bool semOn = false;
+        private bool semOn = false;
         
 
-        public ATM(Account acc)
+        public ATM(Account[] acc)
 		{
 			InitializeComponent();
 
 			login();
-			account = acc;
-		}
+            accounts = acc;
+        }
 
 		public void login()
 		{
@@ -56,7 +58,7 @@ namespace ATMProject
 		public void checkBalance()
 		{
 			goBack = true;
-			mainDisplay.Text = "Your current balance is: " + account.getBalance(semOn);
+			mainDisplay.Text = "Your current balance is: " + loggedIn.getBalance(semOn);
 			d1.Text = "Return to Main Menu";
 			d2.Text = "";
 			d3.Text = "";
@@ -165,14 +167,44 @@ namespace ATMProject
 			PINbox.Text = "";
 		}
 
-		private void enterBut_Click(object sender, EventArgs e)
+        private bool searchAccountNo(String accNo)
+        {
+            
+            for (int i = 0; i < accounts.Length; i++)
+            {
+                if (accNo.Equals(accounts[i].getAccountNumber()))
+                {
+                    accountNo = accNo;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool comparePIN(String pin)
+        {
+
+            for (int i = 0; i < accounts.Length; i++)
+            {
+                if(accountNo.Equals(accounts[i].getAccountNumber()) && pin.Equals(accounts[i].getPIN()))
+                {
+                    loggedIn = accounts[i];
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void enterBut_Click(object sender, EventArgs e)
 		{
 			String screenText = numberDisplay.Text;
 			bool accountNoAccepted = false;
 
 			if(checkForAccount)
 			{
-				if (screenText.Equals(account.getAccountNumber()))
+				if (searchAccountNo(screenText))
 				{
 					savedAccountNo = numberDisplay.Text;
 					numberDisplay.Text = "";
@@ -191,7 +223,7 @@ namespace ATMProject
 
 			if (checkForPin)
 			{
-				if (screenText.Equals(account.getPIN()))
+				if (comparePIN(screenText))
 				{
 					savedPIN = numberDisplay.Text;
 					numberDisplay.Text = "";
@@ -199,8 +231,7 @@ namespace ATMProject
 					checkForPin = false;
 					selectionMenu();
 
-					
-				}
+                }
 				else
 				{
 					mainDisplay.Text = "The PIN was incorrect, please try again.";
@@ -235,7 +266,7 @@ namespace ATMProject
 			
 			System.Diagnostics.Debug.WriteLine( "thr started" + Thread.CurrentThread.Name);
 			
-			if (amountToWithdraw > account.getBalance(semOn))
+			if (amountToWithdraw > loggedIn.getBalance(semOn))
 			{
 				mainDisplay.Text = "Insufficients for withdrawal";
 				takeM = false;
@@ -252,8 +283,8 @@ namespace ATMProject
 			{
                 //This is passsed into get/setbalance so the semaphore can be started/released
                 //We can literally put this bit in an if statement to show working or not working versions
-                semOn = true;
-                double accountBalance = account.getBalance(semOn);
+                //semOn = true;
+                double accountBalance = loggedIn.getBalance(semOn);
                 
                 if(Thread.CurrentThread.Name.Equals("1"))
                 {
@@ -262,7 +293,7 @@ namespace ATMProject
                 }
                 
 				mainDisplay.Text = "Please take your notes";
-				account.setBalance((accountBalance - amountToWithdraw), semOn);
+				loggedIn.setBalance((accountBalance - amountToWithdraw), semOn);
 				takeM = false;
                 //Sets semOn back to false so that when you check the balance elsewhere in the program it doesn't freeze
                 semOn = false;

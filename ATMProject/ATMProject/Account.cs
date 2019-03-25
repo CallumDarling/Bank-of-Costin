@@ -13,9 +13,7 @@ namespace ATMProject
 		private String PIN;
 		private double balance;
         Semaphore sem = new Semaphore(1, 1);
-
-
-
+        
         public Account(String aNumber, String pin, double bal)
 		{
 			accountNumber = aNumber;
@@ -44,7 +42,6 @@ namespace ATMProject
 
 		public void setBalance(double newBal, bool semOn)
 		{
-          
 			balance = newBal;
             if (semOn)
             {
