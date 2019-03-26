@@ -40,7 +40,14 @@ namespace ATMProject
             
 		}
 
-		public void setBalance(double newBal, bool semOn)
+        public double getBalanceRegular()
+        {
+    
+            return balance;
+
+        }
+
+        public void setBalance(double newBal, bool semOn)
 		{
 			balance = newBal;
             if (semOn)

@@ -15,6 +15,7 @@ namespace ATMProject
 	{
 		Account Robert = new Account("123456", "1234", 67.89);
         Account[] accountList = new Account[3];
+        bool syncModeOn = false;
 
         int x = 1;
 
@@ -22,7 +23,7 @@ namespace ATMProject
 
 		private void ThreadProc()
 		{
-			var frm = new ATM(accountList);
+			var frm = new ATM(accountList, syncModeOn);
 			frm.ShowDialog();
 		}
 
@@ -45,12 +46,25 @@ namespace ATMProject
 			Thread newATM = new Thread(new ThreadStart(ThreadProc));
 			newATM.Name = Convert.ToString(x);
 			newATM.Start();
-			x++;
+            if(x == 1)
+            {
+                x++;
+            }
+            else
+            {
+                x--;
+            }
+			
 		}
 
 		private void textBox1_TextChanged(object sender, EventArgs e)
 		{
 
 		}
-	}
+
+        private void syncMode_CheckedChanged(object sender, EventArgs e)
+        {
+            syncModeOn = syncMode.Checked;
+        }
+    }
 }

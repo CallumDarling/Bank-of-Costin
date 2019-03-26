@@ -25,14 +25,20 @@ namespace ATMProject
         private bool takeM = false;
         //Used to show whether the semaphore should be turned on/off in the account class
         private bool semOn = false;
+        private bool syncModeOn;
         
 
-        public ATM(Account[] acc)
+        public ATM(Account[] acc, bool syncModeOn)
 		{
 			InitializeComponent();
 
+            this.syncModeOn = syncModeOn;
+
 			login();
             accounts = acc;
+
+            this.Text = "ATM " + Thread.CurrentThread.Name;
+            
         }
 
 		public void login()
@@ -58,7 +64,7 @@ namespace ATMProject
 		public void checkBalance()
 		{
 			goBack = true;
-			mainDisplay.Text = "Your current balance is: " + loggedIn.getBalance(semOn);
+			mainDisplay.Text = "Your current balance is: £" + loggedIn.getBalance(semOn);
 			d1.Text = "Return to Main Menu";
 			d2.Text = "";
 			d3.Text = "";
@@ -261,44 +267,62 @@ namespace ATMProject
 
 		}
 
+        public bool checkEnoughinAccount(double amountToWithdraw)
+        {
+            
+            if (amountToWithdraw > loggedIn.getBalanceRegular())
+            {
+                mainDisplay.Text = "Insufficients for withdrawal";
+                takeM = false;
+                d1.Text = "";
+                d2.Text = "";
+                d3.Text = "";
+                d4.Text = "";
+                d5.Text = "";
+                d6.Text = "";
+
+                return false;
+            }
+
+            else
+            {
+                return true;
+            }
+        }
+
+
 		public void checkWithdraw(double amountToWithdraw)
 		{
-			
 			System.Diagnostics.Debug.WriteLine( "thr started" + Thread.CurrentThread.Name);
 			
-			if (amountToWithdraw > loggedIn.getBalance(semOn))
-			{
-				mainDisplay.Text = "Insufficients for withdrawal";
-				takeM = false;
-				d1.Text = "";
-				d2.Text = "";
-				d3.Text = "";
-				d4.Text = "";
-				d5.Text = "";
-				d6.Text = "";
-				timer2.Start();
-			}
+            //This is passsed into get/setbalance so the semaphore can be started/released
+            if(syncModeOn)
+            {
+                semOn = true;
+            }
+            
+            double accountBalance = loggedIn.getBalance(semOn);
+                
+            if(Thread.CurrentThread.Name.Equals("1"))
+            {
+                System.Diagnostics.Debug.WriteLine("thr " + Thread.CurrentThread.Name + " is calculating the new balance");
+                Thread.Sleep(3000);
+            }
 
-			else
-			{
-                //This is passsed into get/setbalance so the semaphore can be started/released
-                //We can literally put this bit in an if statement to show working or not working versions
-                //semOn = true;
-                double accountBalance = loggedIn.getBalance(semOn);
+            bool enoughInAccount = checkEnoughinAccount(amountToWithdraw);
+
+            if(enoughInAccount)
+            {
+                mainDisplay.Text = "Please take your notes";
+                loggedIn.setBalance((accountBalance - amountToWithdraw), semOn);
+                takeM = false;
+            }
                 
-                if(Thread.CurrentThread.Name.Equals("1"))
-                {
-                    System.Diagnostics.Debug.WriteLine("thr " + Thread.CurrentThread.Name + " is calculating the new balance");
-                    Thread.Sleep(3000);
-                }
-                
-				mainDisplay.Text = "Please take your notes";
-				loggedIn.setBalance((accountBalance - amountToWithdraw), semOn);
-				takeM = false;
-                //Sets semOn back to false so that when you check the balance elsewhere in the program it doesn't freeze
-                semOn = false;
-				timer2.Start();
-			}
+			
+            //Sets semOn back to false so that when you check the balance elsewhere in the program it doesn't freeze
+            semOn = false;
+			timer2.Start();
+			
 			
 			System.Diagnostics.Debug.WriteLine("thrfin" + Thread.CurrentThread.Name);
 			
